@@ -1,6 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ethers } from 'ethers';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { ethers } from "ethers";
 
 export interface EvmNetworkConfig {
   rpcUrl: string;
@@ -19,24 +19,24 @@ export interface EvmNetworkConfig {
  */
 const NETWORK_CONFIGS: Record<string, EvmNetworkConfig> = {
   ethereum: {
-    rpcUrl: 'https://eth.llamarpc.com',
-    explorerApiUrl: 'https://api.etherscan.io/api',
-    explorerApiKeyEnv: 'ETHERSCAN_API_KEY',
-    symbol: 'ETH',
+    rpcUrl: "https://eth.llamarpc.com",
+    explorerApiUrl: "https://api.etherscan.io/api",
+    explorerApiKeyEnv: process.env.ETHERSCAN_API_KEY,
+    symbol: "ETH",
     decimals: 18,
   },
   bnb: {
-    rpcUrl: 'https://bsc-dataseed.binance.org',
-    explorerApiUrl: 'https://api.bscscan.com/api',
-    explorerApiKeyEnv: 'BSCSCAN_API_KEY',
-    symbol: 'BNB',
+    rpcUrl: "https://bsc-dataseed.binance.org",
+    explorerApiUrl: "https://api.bscscan.com/api",
+    explorerApiKeyEnv: "BSCSCAN_API_KEY",
+    symbol: "BNB",
     decimals: 18,
   },
   polygon: {
-    rpcUrl: 'https://polygon-rpc.com',
-    explorerApiUrl: 'https://api.polygonscan.com/api',
-    explorerApiKeyEnv: 'POLYGONSCAN_API_KEY',
-    symbol: 'MATIC',
+    rpcUrl: "https://polygon-rpc.com",
+    explorerApiUrl: "https://api.polygonscan.com/api",
+    explorerApiKeyEnv: "POLYGONSCAN_API_KEY",
+    symbol: "MATIC",
     decimals: 18,
   },
 };
@@ -59,17 +59,19 @@ export class EvmProvider implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
-    this.network = this.configService.get<string>('NETWORK', 'ethereum');
+    this.network = this.configService.get<string>("NETWORK", "ethereum");
 
     if (!this.isEvmNetwork()) {
-      this.logger.log(`EVM Provider: skipped (selected network is "${this.network}")`);
+      this.logger.log(
+        `EVM Provider: skipped (selected network is "${this.network}")`
+      );
       return;
     }
 
     this.config = NETWORK_CONFIGS[this.network];
     this.explorerApiKey = this.configService.get<string>(
       this.config.explorerApiKeyEnv,
-      '',
+      ""
     );
 
     const rpcUrl =
@@ -81,8 +83,8 @@ export class EvmProvider implements OnModuleInit {
   }
 
   isEvmNetwork(): boolean {
-    return ['ethereum', 'bnb', 'polygon'].includes(
-      this.configService.get<string>('NETWORK', 'ethereum'),
+    return ["ethereum", "bnb", "polygon"].includes(
+      this.configService.get<string>("NETWORK", "ethereum")
     );
   }
 }
