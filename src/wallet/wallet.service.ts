@@ -145,8 +145,13 @@ export class WalletService {
   //   7. Return with cached: false
   // ─────────────────────────────────────────────────────────────────────────
   async getBalance(address: string): Promise<WalletBalance> {
+    if (!this.web3.isAvailable()) {
+      throw new Error(
+        `Web3 instance is not initialized for network: ${this.network}`
+      );
+    }
+
     const rawBalance = await this.web3.instance.eth.getBalance(address);
-    // console.log(`rawBalance: ${rawBalance}`);
     const balance = formatBalance(rawBalance, this.evm.config.decimals);
 
     if (!balance) throw new Error("Not implemented");

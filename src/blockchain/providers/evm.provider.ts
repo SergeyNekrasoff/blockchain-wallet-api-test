@@ -19,7 +19,7 @@ export interface EvmNetworkConfig {
  */
 const NETWORK_CONFIGS: Record<string, EvmNetworkConfig> = {
   ethereum: {
-    rpcUrl: "https://eth.llamarpc.com",
+    rpcUrl: "https://ethereum-rpc.publicnode.com",
     explorerApiUrl: "https://api.etherscan.io/api",
     explorerApiKeyEnv: process.env.ETHERSCAN_API_KEY,
     symbol: "ETH",

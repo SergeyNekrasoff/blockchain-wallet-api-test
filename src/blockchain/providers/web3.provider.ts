@@ -1,6 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Web3 } from 'web3';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Web3 } from "web3";
 
 /**
  * web3.js v4 — the classic Ethereum JavaScript library.
@@ -17,15 +17,15 @@ import { Web3 } from 'web3';
  */
 
 const RPC_ENV: Record<string, string> = {
-  ethereum: 'ETH_RPC_URL',
-  bnb:      'BNB_RPC_URL',
-  polygon:  'POLYGON_RPC_URL',
+  ethereum: "ETH_RPC_URL",
+  bnb: "BNB_RPC_URL",
+  polygon: "POLYGON_RPC_URL",
 };
 
 const DEFAULT_RPC: Record<string, string> = {
-  ethereum: 'https://eth.llamarpc.com',
-  bnb:      'https://bsc-dataseed.binance.org',
-  polygon:  'https://polygon-rpc.com',
+  ethereum: "https://ethereum-rpc.publicnode.com",
+  bnb: "https://bsc-dataseed.binance.org",
+  polygon: "https://polygon-rpc.com",
 };
 
 @Injectable()
@@ -40,10 +40,12 @@ export class Web3Provider implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
-    this.network = this.configService.get<string>('NETWORK', 'ethereum');
+    this.network = this.configService.get<string>("NETWORK", "ethereum");
 
     if (!RPC_ENV[this.network]) {
-      this.logger.log(`Web3 Provider: skipped (selected network is "${this.network}")`);
+      this.logger.log(
+        `Web3 Provider: skipped (selected network is "${this.network}")`
+      );
       return;
     }
 
