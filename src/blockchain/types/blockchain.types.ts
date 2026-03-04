@@ -1,7 +1,15 @@
+export const TokenSymbol: Record<string, string> = {
+  ethereum: "ETH",
+  bnb: "BNB",
+  polygon: "MATIC",
+  solana: "SOL",
+  ton: "TON",
+};
+
 export interface WalletBalance {
   address: string;
-  balance: string;  // native token amount, e.g. "1.523456"
-  symbol: string;   // "ETH" | "BNB" | "MATIC" | "SOL" | "TON"
+  balance: string; // native token amount, e.g. "1.523456"
+  symbol: string; // "ETH" | "BNB" | "MATIC" | "SOL" | "TON"
   network: string;
   cached: boolean;
 }
@@ -10,9 +18,9 @@ export interface Transaction {
   hash: string;
   from: string;
   to: string;
-  value: string;     // native token amount
+  value: string; // native token amount
   timestamp: number; // unix timestamp in seconds
-  status?: 'success' | 'failed' | 'pending';
+  status?: "success" | "failed" | "pending";
 }
 
 export interface TransactionList {
@@ -47,7 +55,7 @@ export interface TokenBalance {
   contractAddress: string; // EVM: 0x... | Solana: mint address
   name: string;
   symbol: string;
-  balance: string;         // human-readable amount
+  balance: string; // human-readable amount
   decimals: number;
   network: string;
 }
@@ -55,8 +63,8 @@ export interface TokenBalance {
 /** NFT item (EVM or Solana) */
 export interface NftItem {
   contractAddress?: string; // EVM: NFT contract address
-  mint?: string;            // Solana: mint address
-  tokenId?: string;         // EVM: token ID
+  mint?: string; // Solana: mint address
+  tokenId?: string; // EVM: token ID
   name: string;
   symbol: string;
   network: string;

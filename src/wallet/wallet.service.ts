@@ -15,6 +15,7 @@ import {
   WatchedWalletWithBalance,
   BalanceAlert,
   TokenBalance,
+  TokenSymbol,
   NftItem,
 } from "../blockchain/types/blockchain.types";
 import {
@@ -151,18 +152,27 @@ export class WalletService {
       );
     }
 
-    const rawBalance = await this.web3.instance.eth.getBalance(address);
-    const balance = formatBalance(rawBalance, this.evm.config.decimals);
+    try {
+      const cacheKey = CACHE_KEYS.balance(address);
+      const cached = await this.redis.get(cacheKey);
 
-    if (!balance) throw new Error("Not implemented");
+      const rawBalance = await this.web3.instance.eth.getBalance(address);
+      const balance = formatBalance(rawBalance, this.evm.config.decimals);
 
-    return {
-      address: address,
-      balance: balance, // native token amount, e.g. "1.523456"
-      symbol: "NN", // "ETH" | "BNB" | "MATIC" | "SOL" | "TON"
-      network: this.network,
-      cached: false,
-    };
+      if (!cached) {
+        await this.redis.set(cacheKey, balance, CACHE_TTL.balance * 1000);
+      }
+
+      return {
+        address: address,
+        balance: balance, // native token amount, e.g. "1.523456"
+        symbol: TokenSymbol[this.network], // "ETH" | "BNB" | "MATIC" | "SOL" | "TON"
+        network: this.network,
+        cached: false,
+      };
+    } catch (error) {
+      throw new Error(`Unable to get balance: ${error}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
