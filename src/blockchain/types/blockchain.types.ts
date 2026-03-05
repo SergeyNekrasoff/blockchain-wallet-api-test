@@ -1,11 +1,3 @@
-export const TokenSymbol: Record<string, string> = {
-  ethereum: "ETH",
-  bnb: "BNB",
-  polygon: "MATIC",
-  solana: "SOL",
-  ton: "TON",
-};
-
 export interface WalletBalance {
   address: string;
   balance: string; // native token amount, e.g. "1.523456"

@@ -20,7 +20,7 @@ export interface EvmNetworkConfig {
 const NETWORK_CONFIGS: Record<string, EvmNetworkConfig> = {
   ethereum: {
     rpcUrl: "https://ethereum-rpc.publicnode.com",
-    explorerApiUrl: "https://api.etherscan.io/api",
+    explorerApiUrl: "https://api.etherscan.io/v2/api",
     explorerApiKeyEnv: process.env.ETHERSCAN_API_KEY,
     symbol: "ETH",
     decimals: 18,
@@ -59,7 +59,10 @@ export class EvmProvider implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
-    this.network = this.configService.get<string>("NETWORK", "ethereum");
+    this.network = this.configService.get<string>(
+      "NETWORK",
+      process.env.NETWORK
+    );
 
     if (!this.isEvmNetwork()) {
       this.logger.log(
@@ -84,7 +87,7 @@ export class EvmProvider implements OnModuleInit {
 
   isEvmNetwork(): boolean {
     return ["ethereum", "bnb", "polygon"].includes(
-      this.configService.get<string>("NETWORK", "ethereum")
+      this.configService.get<string>("NETWORK", this.network)
     );
   }
 }

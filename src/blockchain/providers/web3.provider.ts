@@ -40,7 +40,10 @@ export class Web3Provider implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
-    this.network = this.configService.get<string>("NETWORK", "ethereum");
+    this.network = this.configService.get<string>(
+      "NETWORK",
+      process.env.NETWORK
+    );
 
     if (!RPC_ENV[this.network]) {
       this.logger.log(

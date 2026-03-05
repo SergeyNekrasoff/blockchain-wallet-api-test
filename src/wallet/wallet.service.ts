@@ -11,11 +11,11 @@ import { MetaplexProvider } from "../blockchain/providers/metaplex.provider";
 import { WatchWalletDto } from "./dto/watch-wallet.dto";
 import {
   WalletBalance,
+  Transaction,
   TransactionList,
   WatchedWalletWithBalance,
   BalanceAlert,
   TokenBalance,
-  TokenSymbol,
   NftItem,
 } from "../blockchain/types/blockchain.types";
 import {
@@ -146,9 +146,9 @@ export class WalletService {
   //   7. Return with cached: false
   // ─────────────────────────────────────────────────────────────────────────
   async getBalance(address: string): Promise<WalletBalance> {
-    if (!this.web3.isAvailable()) {
+    if (!this.web3.isAvailable() || !this.evm.isEvmNetwork()) {
       throw new Error(
-        `Web3 instance is not initialized for network: ${this.network}`
+        `Provider is not initialized for network: ${this.network}`
       );
     }
 
@@ -156,17 +156,25 @@ export class WalletService {
       const cacheKey = CACHE_KEYS.balance(address);
       const cached = await this.redis.get(cacheKey);
 
+      if (cached) {
+        return {
+          address: address,
+          balance: cached,
+          symbol: this.evm.config.symbol,
+          network: this.network,
+          cached: true,
+        };
+      }
+
       const rawBalance = await this.web3.instance.eth.getBalance(address);
       const balance = formatBalance(rawBalance, this.evm.config.decimals);
 
-      if (!cached) {
-        await this.redis.set(cacheKey, balance, CACHE_TTL.balance * 1000);
-      }
+      await this.redis.set(cacheKey, balance, CACHE_TTL.balance * 1000);
 
       return {
         address: address,
-        balance: balance, // native token amount, e.g. "1.523456"
-        symbol: TokenSymbol[this.network], // "ETH" | "BNB" | "MATIC" | "SOL" | "TON"
+        balance: balance,
+        symbol: this.evm.config.symbol,
         network: this.network,
         cached: false,
       };
@@ -188,7 +196,72 @@ export class WalletService {
   //   7. Return TransactionList with cached: false
   // ─────────────────────────────────────────────────────────────────────────
   async getTransactions(address: string, limit = 10): Promise<TransactionList> {
-    throw new Error("Not implemented");
+    if (!this.web3.isAvailable() || !this.evm.isEvmNetwork()) {
+      throw new Error(
+        `Provider instance is not initialized for network: ${this.network}`
+      );
+    }
+
+    const cacheKey = CACHE_KEYS.transactions(address, limit);
+    const cached = await this.redis.get(cacheKey);
+
+    if (cached) {
+      return {
+        address: address,
+        transactions: JSON.parse(cached),
+        network: this.network,
+        cached: true,
+      };
+    }
+
+    const params = new URLSearchParams({
+      module: "account",
+      action: "txlist",
+      chainid: "1",
+      address: address,
+      sort: "desc",
+      page: "1",
+      offset: limit.toString(),
+      apikey: this.evm.config.explorerApiKeyEnv,
+    });
+
+    try {
+      const urlPath = `${this.evm.config.explorerApiUrl}?${params}`;
+      const response = await fetch(urlPath);
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to complete request for retrieve Transactions: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+      const transactionList: Transaction[] = data.result.map((tx) => ({
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: tx.value
+          ? formatBalance(tx.value, this.evm.config.decimals)
+          : "0",
+        timestamp: tx.timestamp,
+        status: tx.txreceipt_status === 1 ? "success" : "failed",
+      }));
+
+      await this.redis.set(
+        cacheKey,
+        JSON.stringify(transactionList),
+        CACHE_TTL.transactions * 1000
+      );
+
+      return {
+        address: address,
+        transactions: transactionList,
+        network: this.network,
+        cached: false,
+      };
+    } catch (error) {
+      throw new Error(`Unable to get transactions: ${error.message}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -213,7 +286,14 @@ export class WalletService {
     //   })
     // );
 
-    throw new Error("Not implemented");
+    try {
+      return {
+        success: true,
+        address: dto.address,
+      };
+    } catch (error) {
+      throw new Error(`Unable to get watch Wallet by ${dto.label}: ${error}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
