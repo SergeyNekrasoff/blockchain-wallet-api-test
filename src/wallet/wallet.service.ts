@@ -276,15 +276,17 @@ export class WalletService {
   async watchWallet(
     dto: WatchWalletDto
   ): Promise<{ success: boolean; address: string }> {
-    // const storedRedis = await this.redis.hset(
-    //   CACHE_KEYS.watchlist,
-    //   dto.address,
-    //   JSON.stringify({
-    //     address: dto.address,
-    //     label: dto.label,
-    //     addedAt: Date.now(),
-    //   })
-    // );
+    const walletData = JSON.stringify({
+      address: dto.address,
+      label: dto.label,
+      addedAt: Date.now(),
+    });
+
+    const storedRedis = await this.redis.hset(
+      CACHE_KEYS.watchlist,
+      dto.address,
+      walletData
+    );
 
     try {
       return {
@@ -292,7 +294,7 @@ export class WalletService {
         address: dto.address,
       };
     } catch (error) {
-      throw new Error(`Unable to get watch Wallet by ${dto.label}: ${error}`);
+      throw new Error(`Unable to watch Wallet by ${dto.label}: ${error}`);
     }
   }
 
