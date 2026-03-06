@@ -3,11 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { RedisService } from "../redis/redis.service";
 import { EvmProvider } from "../blockchain/providers/evm.provider";
-import { SolanaProvider } from "../blockchain/providers/solana.provider";
 import { Web3Provider } from "../blockchain/providers/web3.provider";
-import { TonProvider } from "../blockchain/providers/ton.provider";
-import { MoralisProvider } from "../blockchain/providers/moralis.provider";
-import { MetaplexProvider } from "../blockchain/providers/metaplex.provider";
 import { WatchWalletDto } from "./dto/watch-wallet.dto";
 import {
   WalletBalance,
@@ -121,11 +117,7 @@ export class WalletService {
   constructor(
     private readonly redis: RedisService,
     private readonly evm: EvmProvider,
-    private readonly sol: SolanaProvider,
     private readonly web3: Web3Provider,
-    private readonly ton: TonProvider,
-    private readonly moralis: MoralisProvider,
-    private readonly metaplex: MetaplexProvider,
     private readonly configService: ConfigService,
     private readonly events: EventEmitter2
   ) {
@@ -379,7 +371,7 @@ export class WalletService {
       );
 
       return result.filter(
-        (wallet: WatchedWalletWithBalance) => wallet !== null
+        (wallet) => (wallet as WatchedWalletWithBalance) !== null
       );
     } catch (error) {
       throw new Error(`Failed to fetch watched wallets: ${error.message}`);
