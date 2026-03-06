@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { RedisService } from "../redis/redis.service";
@@ -116,6 +116,7 @@ const CACHE_TTL = {
 @Injectable()
 export class WalletService {
   private readonly network: string;
+  private readonly logger = new Logger(WalletService.name);
 
   constructor(
     private readonly redis: RedisService,
@@ -266,10 +267,10 @@ export class WalletService {
           cached: false,
         };
       } catch (error) {
-        throw new Error(`Failed to get transactions: ${error.message}`);
+        this.logger.error(`Failed to get transactions: ${error.message}`);
       }
     } catch (error) {
-      throw new Error(`Unable to get transactions: ${error.message}`);
+      throw new Error(`Failed to get transactions: ${error.message}`);
     }
   }
 
@@ -332,41 +333,44 @@ export class WalletService {
       const result = await Promise.all(
         watchedList.map(async (wallet): Promise<WatchedWalletWithBalance> => {
           try {
-            const current: WatchedWallet = JSON.parse(wallet);
+            const currentWallet: WatchedWallet = JSON.parse(wallet);
 
             const rawBalance = await this.web3.instance.eth.getBalance(
-              current.address
+              currentWallet.address
             );
-            const balance = formatBalance(rawBalance, this.evm.config.decimals);
+            const balanceFormatted = formatBalance(
+              rawBalance,
+              this.evm.config.decimals
+            );
             const lastBalance = await this.redis.get(
-              CACHE_KEYS.lastBalance(current.address)
+              CACHE_KEYS.lastBalance(currentWallet.address)
             );
 
-            if (hasBalanceChanged(lastBalance, balance)) {
+            if (hasBalanceChanged(lastBalance, balanceFormatted)) {
               this.events.emit(WALLET_BALANCE_CHANGED, {
-                address: current.address,
+                address: currentWallet.address,
                 network: this.network,
                 symbol: this.evm.config.symbol,
                 previousBalance: lastBalance ?? "0",
-                currentBalance: balance,
+                currentBalance: balanceFormatted,
                 detectedAt: Date.now(),
               } as WalletBalanceChangedEvent);
+
+              await this.redis.set(
+                CACHE_KEYS.lastBalance(currentWallet.address),
+                balanceFormatted
+              );
             }
 
-            await this.redis.set(
-              CACHE_KEYS.lastBalance(current.address),
-              balance
-            );
-
             return {
-              address: current.address,
-              label: current.label,
-              addedAt: current.addedAt,
-              balance: balance,
+              address: currentWallet.address,
+              label: currentWallet.label,
+              addedAt: currentWallet.addedAt,
+              balance: balanceFormatted,
               symbol: this.evm.config.symbol,
             } as WatchedWalletWithBalance;
           } catch (error) {
-            console.error(
+            this.logger.error(
               `Error processing wallet ${wallet}: ${error.message}`
             );
             return null;
@@ -391,7 +395,9 @@ export class WalletService {
   async getAlerts(): Promise<BalanceAlert[]> {
     const raw = await this.redis.lrange(CACHE_KEYS.alerts, 0, -1);
 
-    if (!raw) throw new Error("Not implemented");
+    if (!raw) {
+      throw new Error(`Unable to get balance changed alerts`);
+    }
 
     return raw.map((item) => JSON.parse(item) as BalanceAlert);
   }
