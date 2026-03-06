@@ -16,7 +16,7 @@ npm run start:dev           # запустить приложение
 ```
 
 > добавить приватный ключ в .env для ETHERSCAN_API_KEY и выбрать NETWORK=ethereum
-> wallet.service.spec.ts -> getBalance метод
+> Тест: wallet.service.spec.ts -> getBalance метод
 
 Swagger с документацией всех эндпоинтов: **http://localhost:3000/api**
 
@@ -24,11 +24,11 @@ Swagger с документацией всех эндпоинтов: **http://lo
 
 ## Готовы
 
-**GET /wallet/:address/balance**
-**GET /wallet/:address/transactions?limit=5**
-**POST /wallets/watch**
-**GET /wallets/watched**
-**GET /wallets/alerts**
+**GET /wallet/:address/balance**  
+**GET /wallet/:address/transactions?limit=5**  
+**POST /wallets/watch**  
+**GET /wallets/watched**  
+**GET /wallets/alerts**  
 
 ---
 
