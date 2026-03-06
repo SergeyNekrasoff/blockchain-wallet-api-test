@@ -15,14 +15,16 @@ docker-compose up -d        # поднять Redis
 npm run start:dev           # запустить приложение
 ```
 
-> добавить приватный ключ в .env для ETHERSCAN_API_KEY и выбрать NETWORK=ethereum
-> Тест: wallet.service.spec.ts -> getBalance метод
-
 Swagger с документацией всех эндпоинтов: **http://localhost:3000/api**
 
 ---
 
 ## Готовы
+
+```bash
+добавить приватный ключ в .env для ETHERSCAN_API_KEY и выбрать NETWORK=ethereum
+Тест: wallet.service.spec.ts -> getBalance метод
+```
 
 **GET /wallet/:address/balance**  
 **GET /wallet/:address/transactions?limit=5**  
